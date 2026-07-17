@@ -9,6 +9,21 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    span[data-baseweb="tag"] {
+        background-color: #E3F2FD !important;
+        color: #0D47A1 !important;
+    }
+    span[data-baseweb="tag"] span[role="img"] {
+        color: #0D47A1 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 SATISFACTION_ORDER = [
     "Very Satisfied",
     "Satisfied",
@@ -67,6 +82,22 @@ DISPLAY_COLUMNS = [
     "overall_satisfaction",
     "satisfaction_category",
 ]
+DISPLAY_COLUMN_LABELS = {
+    "student_id": "ID Mahasiswa",
+    "age": "Usia",
+    "gender": "Jenis Kelamin",
+    "country": "Negara Asal",
+    "program_level": "Jenjang",
+    "field_of_study": "Bidang Studi",
+    "year_of_study": "Tahun Studi",
+    "scholarship": "Penerima Beasiswa",
+    "online_classes": "Kelas Daring",
+    "campus_facilities_rating": "Nilai Fasilitas",
+    "teaching_quality_rating": "Nilai Pengajaran",
+    "overall_satisfaction": "Kepuasan Keseluruhan",
+    "satisfaction_category": "Kategori Kepuasan",
+}
+MIN_SAMPLE_WARNING = 10
 
 
 def classify_satisfaction(value: str) -> str:
@@ -117,55 +148,37 @@ def render_filters(df: pd.DataFrame) -> pd.DataFrame:
     st.subheader("Filter Data")
     st.caption(
         "Gunakan filter untuk membandingkan pengalaman mahasiswa berdasarkan "
-        "jenjang, bidang studi, tahun studi, beasiswa, dan kelas daring."
+        "bidang studi, tahun studi, kelas daring, dan beasiswa."
     )
 
-    row1 = st.columns(4)
+    row1 = st.columns([1, 1, 1, 1, 0.7])
     with row1[0]:
         st.multiselect(
-            "Program Level",
-            options=sorted(df["program_level"].unique()),
-            key="program_level",
-        )
-    with row1[1]:
-        st.multiselect(
-            "Field of Study",
+            "Bidang Studi",
             options=sorted(df["field_of_study"].unique()),
             key="field_of_study",
         )
-    with row1[2]:
+    with row1[1]:
         st.multiselect(
-            "Year of Study",
+            "Tahun Studi",
             options=sorted(df["year_of_study"].unique()),
             key="year_of_study",
         )
-    with row1[3]:
+    with row1[2]:
         st.multiselect(
-            "Scholarship",
-            options=sorted(df["scholarship"].unique()),
-            key="scholarship",
-        )
-
-    row2 = st.columns(4)
-    with row2[0]:
-        st.multiselect(
-            "Online Classes",
+            "Kelas Daring",
             options=sorted(df["online_classes"].unique()),
+            format_func=lambda x: {"Yes": "Daring", "No": "Non-daring"}.get(x, x),
             key="online_classes",
         )
-    with row2[1]:
+    with row1[3]:
         st.multiselect(
-            "Country of Origin",
-            options=sorted(df["country"].unique()),
-            key="country",
+            "Beasiswa",
+            options=sorted(df["scholarship"].unique()),
+            format_func=lambda x: {"Yes": "Penerima", "No": "Nonpenerima"}.get(x, x),
+            key="scholarship",
         )
-    with row2[2]:
-        st.multiselect(
-            "Gender",
-            options=sorted(df["gender"].unique()),
-            key="gender",
-        )
-    with row2[3]:
+    with row1[4]:
         st.write("")
         st.write("")
         st.button(
@@ -174,6 +187,27 @@ def render_filters(df: pd.DataFrame) -> pd.DataFrame:
             args=(df,),
             use_container_width=True,
         )
+
+    with st.expander("Filter lanjutan"):
+        adv = st.columns(3)
+        with adv[0]:
+            st.multiselect(
+                "Jenjang Pendidikan",
+                options=sorted(df["program_level"].unique()),
+                key="program_level",
+            )
+        with adv[1]:
+            st.multiselect(
+                "Negara Asal",
+                options=sorted(df["country"].unique()),
+                key="country",
+            )
+        with adv[2]:
+            st.multiselect(
+                "Jenis Kelamin",
+                options=sorted(df["gender"].unique()),
+                key="gender",
+            )
 
     required = [
         st.session_state.program_level,
@@ -208,18 +242,27 @@ def render_kpi(filtered_df: pd.DataFrame) -> None:
     pct_satisfied = (
         filtered_df["satisfaction_category"].eq("Puas").sum() / total * 100
     )
+    pct_neutral = (
+        filtered_df["satisfaction_category"].eq("Netral").sum() / total * 100
+    )
     pct_dissatisfied = (
         filtered_df["satisfaction_category"].eq("Tidak Puas").sum() / total * 100
     )
     avg_teaching = filtered_df["teaching_quality_rating"].mean()
     avg_facilities = filtered_df["campus_facilities_rating"].mean()
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
     c1.metric("Total Responden", f"{total:,}".replace(",", "."))
     c2.metric("Mahasiswa Puas", f"{pct_satisfied:.1f}%")
-    c3.metric("Mahasiswa Tidak Puas", f"{pct_dissatisfied:.1f}%")
-    c4.metric("Rata-rata Kualitas Pengajaran", f"{avg_teaching:.2f} / 5")
-    c5.metric("Rata-rata Fasilitas Kampus", f"{avg_facilities:.2f} / 5")
+    c3.metric("Mahasiswa Netral", f"{pct_neutral:.1f}%")
+    c4.metric("Mahasiswa Tidak Puas", f"{pct_dissatisfied:.1f}%")
+    c5.metric("Rata-rata Kualitas Pengajaran", f"{avg_teaching:.2f} / 5")
+    c6.metric("Rata-rata Fasilitas Kampus", f"{avg_facilities:.2f} / 5")
+    st.caption(
+        "Puas = Satisfied + Very Satisfied · "
+        "Tidak Puas = Dissatisfied + Very Dissatisfied · "
+        "Netral = Neutral"
+    )
 
 
 def satisfaction_distribution_chart(filtered_df: pd.DataFrame):
@@ -262,10 +305,26 @@ def field_satisfaction_chart(filtered_df: pd.DataFrame):
         .size()
         .reset_index(name="jumlah")
     )
+    field_n = filtered_df.groupby("field_of_study").size().to_dict()
     field_totals = field_counts.groupby("field_of_study")["jumlah"].transform("sum")
-    field_counts = field_counts.assign(persen=field_counts["jumlah"] / field_totals * 100)
+    field_counts = field_counts.assign(
+        persen=field_counts["jumlah"] / field_totals * 100,
+        field_label=field_counts["field_of_study"].map(
+            lambda f: f"{f} (n={field_n[f]})"
+        ),
+    )
+    field_counts = field_counts.assign(
+        text_label=field_counts.apply(
+            lambda r: (
+                f"{r['persen']:.1f}%"
+                if r["satisfaction_category"] == "Tidak Puas"
+                else ""
+            ),
+            axis=1,
+        ),
+    )
 
-    order = (
+    order_fields = (
         field_counts[field_counts["satisfaction_category"] == "Tidak Puas"]
         .sort_values("persen", ascending=False)["field_of_study"]
         .tolist()
@@ -273,26 +332,36 @@ def field_satisfaction_chart(filtered_df: pd.DataFrame):
     missing = [
         field
         for field in sorted(filtered_df["field_of_study"].unique())
-        if field not in order
+        if field not in order_fields
     ]
-    order = order + missing
+    order_fields = order_fields + missing
+    order_labels = [f"{f} (n={field_n[f]})" for f in order_fields]
 
     fig = px.bar(
         field_counts,
         x="persen",
-        y="field_of_study",
+        y="field_label",
         color="satisfaction_category",
         orientation="h",
         color_discrete_map=CATEGORY_COLORS,
+        text="text_label",
         category_orders={
-            "field_of_study": order,
+            "field_label": order_labels,
             "satisfaction_category": CATEGORY_ORDER,
         },
         labels={
             "persen": "Proporsi (%)",
-            "field_of_study": "Bidang Studi",
+            "field_label": "Bidang Studi",
             "satisfaction_category": "Kategori",
         },
+        custom_data=["jumlah", "field_of_study"],
+    )
+    fig.update_traces(
+        textposition="inside",
+        hovertemplate=(
+            "%{customdata[1]}<br>%{fullData.name}: %{x:.1f}% "
+            "(n=%{customdata[0]})<extra></extra>"
+        ),
     )
     fig.update_layout(
         barmode="stack",
@@ -309,55 +378,66 @@ def teaching_facilities_by_field_chart(filtered_df: pd.DataFrame):
         .agg(
             teaching_quality_rating=("teaching_quality_rating", "mean"),
             campus_facilities_rating=("campus_facilities_rating", "mean"),
-        )
-        .melt(
-            id_vars="field_of_study",
-            value_vars=["teaching_quality_rating", "campus_facilities_rating"],
-            var_name="indikator",
-            value_name="rata_rata",
+            n=("student_id", "count"),
         )
     )
-    summary = summary.assign(
-        indikator=summary["indikator"].map(
+    melted = summary.melt(
+        id_vars=["field_of_study", "n"],
+        value_vars=["teaching_quality_rating", "campus_facilities_rating"],
+        var_name="indikator",
+        value_name="rata_rata",
+    )
+    melted = melted.assign(
+        indikator=melted["indikator"].map(
             {
                 "teaching_quality_rating": "Kualitas Pengajaran",
                 "campus_facilities_rating": "Fasilitas Kampus",
             }
-        )
+        ),
+        field_label=melted.apply(
+            lambda r: f"{r['field_of_study']} (n={r['n']})", axis=1
+        ),
     )
 
     avg_teaching = filtered_df["teaching_quality_rating"].mean()
     avg_facilities = filtered_df["campus_facilities_rating"].mean()
 
     fig = px.bar(
-        summary,
+        melted,
         x="rata_rata",
-        y="field_of_study",
+        y="field_label",
         color="indikator",
         barmode="group",
         orientation="h",
         labels={
             "rata_rata": "Rata-rata (skala 1–5)",
-            "field_of_study": "Bidang Studi",
+            "field_label": "Bidang Studi",
             "indikator": "Indikator",
         },
         color_discrete_sequence=["#1565C0", "#00897B"],
+        custom_data=["n", "field_of_study"],
+    )
+    fig.update_traces(
+        hovertemplate=(
+            "%{customdata[1]}<br>%{fullData.name}: %{x:.2f} "
+            "(n=%{customdata[0]})<extra></extra>"
+        )
     )
     fig.add_vline(
         x=avg_teaching,
         line_dash="dash",
         line_color="#1565C0",
-        annotation_text="Rata-rata pengajaran",
-        annotation_position="top",
+        annotation_text=f"Rata-rata pengajaran ({avg_teaching:.2f})",
+        annotation_position="top left",
     )
     fig.add_vline(
         x=avg_facilities,
         line_dash="dot",
         line_color="#00897B",
-        annotation_text="Rata-rata fasilitas",
-        annotation_position="bottom",
+        annotation_text=f"Rata-rata fasilitas ({avg_facilities:.2f})",
+        annotation_position="bottom right",
     )
-    fig.update_layout(margin=dict(l=20, r=20, t=40, b=20), xaxis=dict(range=[1, 5]))
+    fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), xaxis=dict(range=[1, 5]))
     return fig
 
 
@@ -366,16 +446,25 @@ def rating_satisfaction_heatmap(
     rating_col: str,
     title: str,
 ):
-    heat = (
-        filtered_df.groupby([rating_col, "overall_satisfaction"])
-        .size()
-        .reset_index(name="jumlah")
-    )
     pivot = (
-        heat.pivot(index=rating_col, columns="overall_satisfaction", values="jumlah")
+        pd.crosstab(
+            filtered_df[rating_col],
+            filtered_df["overall_satisfaction"],
+            normalize="index",
+        )
         .reindex(index=[1, 2, 3, 4, 5], columns=SATISFACTION_ORDER)
         .fillna(0)
+        * 100
     )
+    row_n = (
+        filtered_df.groupby(rating_col)
+        .size()
+        .reindex([1, 2, 3, 4, 5])
+        .fillna(0)
+        .astype(int)
+    )
+    text = pivot.map(lambda x: f"{x:.1f}%")
+    customdata = [[int(row_n.loc[idx])] * len(pivot.columns) for idx in pivot.index]
 
     fig = go.Figure(
         data=go.Heatmap(
@@ -383,11 +472,16 @@ def rating_satisfaction_heatmap(
             x=list(pivot.columns),
             y=[str(i) for i in pivot.index],
             colorscale="YlGnBu",
-            text=pivot.values.astype(int),
+            zmin=0,
+            zmax=100,
+            text=text.values,
             texttemplate="%{text}",
+            customdata=customdata,
             hovertemplate=(
-                "Rating %{y}<br>%{x}<br>Jumlah: %{z}<extra></extra>"
+                "Rating %{y} (n=%{customdata})<br>%{x}<br>"
+                "Proporsi: %{z:.1f}%<extra></extra>"
             ),
+            colorbar=dict(title="Proporsi responden<br>pada setiap rating (%)"),
         )
     )
     fig.update_layout(
@@ -409,25 +503,29 @@ def stacked_group_chart(
         .size()
         .reset_index(name="jumlah")
     )
+    group_n = filtered_df.groupby(group_col).size().to_dict()
     totals = counts.groupby(group_col)["jumlah"].transform("sum")
     counts = counts.assign(
         persen=counts["jumlah"] / totals * 100,
-        **{group_col: counts[group_col].map(labels).fillna(counts[group_col])},
+        group_label=counts[group_col].map(
+            lambda v: f"{labels.get(v, v)} (n={group_n[v]})"
+        ),
     )
 
     fig = px.bar(
         counts,
-        x=group_col,
+        x="group_label",
         y="persen",
         color="satisfaction_category",
         color_discrete_map=CATEGORY_COLORS,
         category_orders={"satisfaction_category": CATEGORY_ORDER},
         labels={
-            group_col: "",
+            "group_label": "",
             "persen": "Proporsi (%)",
             "satisfaction_category": "Kategori",
         },
         text=counts["persen"].map(lambda x: f"{x:.1f}%"),
+        custom_data=["jumlah"],
     )
     fig.update_layout(
         barmode="stack",
@@ -436,20 +534,60 @@ def stacked_group_chart(
         margin=dict(l=20, r=20, t=30, b=20),
         yaxis=dict(range=[0, 100]),
     )
-    fig.update_traces(textposition="inside")
+    fig.update_traces(
+        textposition="inside",
+        hovertemplate=(
+            "%{x}<br>%{fullData.name}: %{y:.1f}% "
+            "(n=%{customdata[0]})<extra></extra>"
+        ),
+    )
     return fig
 
 
+def category_share(filtered_df: pd.DataFrame, mask: pd.Series, category: str) -> float:
+    subset = filtered_df.loc[mask]
+    if len(subset) == 0:
+        return 0.0
+    return subset["satisfaction_category"].eq(category).mean() * 100
+
+
+def online_classes_insight(filtered_df: pd.DataFrame) -> str:
+    online = filtered_df["online_classes"].eq("Yes")
+    offline = filtered_df["online_classes"].eq("No")
+    puas_online = category_share(filtered_df, online, "Puas")
+    puas_offline = category_share(filtered_df, offline, "Puas")
+    tidak_online = category_share(filtered_df, online, "Tidak Puas")
+    tidak_offline = category_share(filtered_df, offline, "Tidak Puas")
+    gap = abs(tidak_online - tidak_offline)
+    return (
+        f"Distribusi kepuasan mahasiswa daring dan non-daring relatif serupa. "
+        f"Persentase mahasiswa puas masing-masing {puas_online:.1f}% (daring) "
+        f"dan {puas_offline:.1f}% (non-daring), sedangkan ketidakpuasan hanya "
+        f"berbeda sekitar {gap:.1f} poin persentase."
+    )
+
+
+def scholarship_insight(filtered_df: pd.DataFrame) -> str:
+    recipient = filtered_df["scholarship"].eq("Yes")
+    non_recipient = filtered_df["scholarship"].eq("No")
+    puas_yes = category_share(filtered_df, recipient, "Puas")
+    puas_no = category_share(filtered_df, non_recipient, "Puas")
+    return (
+        f"Mahasiswa nonpenerima beasiswa memiliki proporsi puas {puas_no:.1f}%, "
+        f"dibandingkan {puas_yes:.1f}% pada penerima beasiswa. "
+        "Selisih ini bersifat deskriptif dan belum membuktikan bahwa beasiswa "
+        "memengaruhi kepuasan."
+    )
+
+
 def priority_insight(filtered_df: pd.DataFrame) -> str:
-    field_stats = (
-        filtered_df.groupby("field_of_study", as_index=False)
-        .agg(
-            pct_tidak_puas=(
-                "satisfaction_category",
-                lambda s: (s == "Tidak Puas").mean() * 100,
-            ),
-            avg_teaching=("teaching_quality_rating", "mean"),
-        )
+    field_stats = filtered_df.groupby("field_of_study", as_index=False).agg(
+        pct_tidak_puas=(
+            "satisfaction_category",
+            lambda s: (s == "Tidak Puas").mean() * 100,
+        ),
+        avg_teaching=("teaching_quality_rating", "mean"),
+        n=("student_id", "count"),
     )
     uni_avg_teaching = filtered_df["teaching_quality_rating"].mean()
     priority = field_stats[
@@ -460,34 +598,33 @@ def priority_insight(filtered_df: pd.DataFrame) -> str:
     if priority.empty:
         top = field_stats.sort_values("pct_tidak_puas", ascending=False).iloc[0]
         return (
-            f"Bidang studi dengan proporsi ketidakpuasan tertinggi saat ini adalah "
-            f"**{top['field_of_study']}** ({top['pct_tidak_puas']:.1f}%). "
-            "Pola ini bersifat deskriptif dan perlu ditindaklanjuti dengan evaluasi lebih lanjut."
+            f"Dalam data simulasi ini, **{top['field_of_study']}** "
+            f"(n={int(top['n'])}) menunjukkan indikasi awal proporsi ketidakpuasan "
+            f"tertinggi ({top['pct_tidak_puas']:.1f}%). "
+            "Temuan bersifat deskriptif dan perlu dievaluasi lebih lanjut."
         )
 
     names = ", ".join(priority["field_of_study"].head(3).tolist())
     return (
-        f"Bidang studi yang perlu menjadi prioritas evaluasi akademik: **{names}**. "
-        "Kelompok ini memiliki proporsi mahasiswa tidak puas yang relatif tinggi "
-        "serta penilaian kualitas pengajaran di bawah rata-rata universitas. "
-        "Temuan ini tidak membuktikan hubungan sebab-akibat."
+        f"Dalam data simulasi ini, **{names}** menunjukkan indikasi awal sebagai "
+        "bidang studi yang perlu dievaluasi lebih lanjut karena memiliki proporsi "
+        "mahasiswa tidak puas relatif tinggi dan nilai kualitas pengajaran di bawah "
+        "rata-rata keseluruhan. Kata “indikasi awal” penting karena belum ada "
+        "pengujian statistik dan datanya bersifat sintetis."
     )
 
 
 def country_dissatisfaction_map(filtered_df: pd.DataFrame):
-    country_stats = (
-        filtered_df.groupby("country", as_index=False)
-        .agg(
-            jumlah=("student_id", "count"),
-            pct_tidak_puas=(
-                "satisfaction_category",
-                lambda s: (s == "Tidak Puas").mean() * 100,
-            ),
-            pct_puas=(
-                "satisfaction_category",
-                lambda s: (s == "Puas").mean() * 100,
-            ),
-        )
+    country_stats = filtered_df.groupby("country", as_index=False).agg(
+        jumlah=("student_id", "count"),
+        pct_tidak_puas=(
+            "satisfaction_category",
+            lambda s: (s == "Tidak Puas").mean() * 100,
+        ),
+        pct_puas=(
+            "satisfaction_category",
+            lambda s: (s == "Puas").mean() * 100,
+        ),
     )
     country_stats = country_stats.assign(
         iso_alpha=country_stats["country"].map(COUNTRY_ISO3)
@@ -498,18 +635,18 @@ def country_dissatisfaction_map(filtered_df: pd.DataFrame):
         locations="iso_alpha",
         color="pct_tidak_puas",
         hover_name="country",
-        hover_data={
-            "iso_alpha": False,
-            "jumlah": True,
-            "pct_puas": ":.1f",
-            "pct_tidak_puas": ":.1f",
-        },
+        custom_data=["jumlah", "pct_tidak_puas", "pct_puas"],
         color_continuous_scale="OrRd",
-        labels={
-            "pct_tidak_puas": "% Tidak Puas",
-            "pct_puas": "% Puas",
-            "jumlah": "Jumlah responden",
-        },
+        range_color=[0, 100],
+        labels={"pct_tidak_puas": "% Tidak Puas"},
+    )
+    fig.update_traces(
+        hovertemplate=(
+            "Negara: %{hovertext}<br>"
+            "Tidak puas: %{customdata[1]:.1f}%<br>"
+            "Puas: %{customdata[2]:.1f}%<br>"
+            "Jumlah responden: %{customdata[0]}<extra></extra>"
+        )
     )
     fig.update_layout(
         margin=dict(l=10, r=10, t=10, b=10),
@@ -518,7 +655,39 @@ def country_dissatisfaction_map(filtered_df: pd.DataFrame):
             showcoastlines=True,
             projection_type="natural earth",
         ),
-        coloraxis_colorbar=dict(title="% Tidak Puas"),
+        coloraxis_colorbar=dict(
+            title="% Tidak Puas",
+            ticksuffix="%",
+        ),
+    )
+    return fig, country_stats
+
+
+def country_dissatisfaction_bar(country_stats: pd.DataFrame):
+    ordered = country_stats.sort_values("pct_tidak_puas", ascending=True)
+    fig = px.bar(
+        ordered,
+        x="pct_tidak_puas",
+        y="country",
+        orientation="h",
+        text=ordered.apply(
+            lambda r: f"{r['pct_tidak_puas']:.1f}% (n={int(r['jumlah'])})",
+            axis=1,
+        ),
+        labels={
+            "pct_tidak_puas": "Proporsi Tidak Puas (%)",
+            "country": "Negara Asal",
+        },
+        color="pct_tidak_puas",
+        color_continuous_scale="OrRd",
+        range_color=[0, 100],
+    )
+    fig.update_traces(textposition="outside")
+    fig.update_layout(
+        showlegend=False,
+        margin=dict(l=20, r=40, t=20, b=20),
+        xaxis=dict(range=[0, 100]),
+        coloraxis_showscale=False,
     )
     return fig
 
@@ -546,7 +715,7 @@ def main() -> None:
     st.header("1. Kondisi Kepuasan Mahasiswa")
     col_sat, col_map = st.columns(2)
     with col_sat:
-        st.subheader("Distribusi Tingkat Kepuasan")
+        st.subheader("Distribusi tingkat kepuasan responden")
         st.caption(
             "Grafik menunjukkan distribusi seluruh tingkat kepuasan, sehingga rektorat "
             "tidak hanya bergantung pada satu nilai rata-rata."
@@ -556,29 +725,44 @@ def main() -> None:
             use_container_width=True,
         )
     with col_map:
-        st.subheader("Peta negara asal mahasiswa")
+        st.subheader("Proporsi mahasiswa tidak puas menurut negara asal")
         st.caption(
-            "Peta menampilkan proporsi mahasiswa tidak puas berdasarkan negara asal. "
+            "Warna peta memakai skala tetap 0–100% agar perbedaan antarnegara "
+            "tidak terlihat lebih dramatis dari angka sebenarnya. "
             "Ini bukan lokasi kampus, melainkan asal responden."
         )
+        map_fig, country_stats = country_dissatisfaction_map(filtered_df)
+        st.plotly_chart(map_fig, use_container_width=True)
+        small_n = country_stats[country_stats["jumlah"] < MIN_SAMPLE_WARNING]
+        if not small_n.empty:
+            names = ", ".join(small_n["country"].tolist())
+            st.warning(
+                f"Kelompok dengan kurang dari {MIN_SAMPLE_WARNING} responden "
+                f"perlu diinterpretasikan secara hati-hati: {names}."
+            )
+
+    with st.expander("Peringkat negara (bar chart — lebih akurat untuk negara kecil)"):
         st.plotly_chart(
-            country_dissatisfaction_map(filtered_df),
+            country_dissatisfaction_bar(country_stats),
             use_container_width=True,
         )
 
     st.divider()
     st.header("2. Kelompok yang Memerlukan Perhatian")
-    st.subheader("Bidang studi dengan proporsi mahasiswa tidak puas tertinggi")
+    st.subheader("Distribusi kepuasan menurut bidang studi")
     st.caption(
-        "Proporsi digunakan agar perbandingan antarbidang studi tetap adil meskipun "
-        "jumlah responden berbeda."
+        "Diurutkan berdasarkan proporsi mahasiswa tidak puas tertinggi. "
+        "Proporsi digunakan agar perbandingan antarbidang tetap adil meskipun "
+        "jumlah responden berbeda. Persentase pada bagian merah menunjukkan "
+        "proporsi Tidak Puas."
     )
     st.plotly_chart(field_satisfaction_chart(filtered_df), use_container_width=True)
 
     st.subheader("Kualitas pengajaran dan fasilitas per bidang studi")
     st.caption(
-        "Garis referensi menunjukkan rata-rata universitas agar bidang di bawah "
-        "rata-rata lebih mudah dikenali."
+        "Skala sumbu tetap 1–5 agar perbedaan tidak dilebih-lebihkan. "
+        "Garis referensi menunjukkan rata-rata universitas. "
+        "Selisih antarkelompok pada data ini relatif kecil."
     )
     st.plotly_chart(
         teaching_facilities_by_field_chart(filtered_df),
@@ -592,33 +776,35 @@ def main() -> None:
     with left:
         st.subheader("Kualitas pengajaran vs kepuasan")
         st.caption(
-            "Ketika penilaian kualitas pengajaran meningkat, apakah distribusi "
-            "kepuasan bergeser ke arah yang lebih positif?"
+            "Setiap baris berjumlah 100%: dari mahasiswa dengan rating pengajaran "
+            "tertentu, berapa persen yang puas, netral, dan tidak puas?"
         )
         st.plotly_chart(
             rating_satisfaction_heatmap(
                 filtered_df,
                 "teaching_quality_rating",
-                "Teaching Quality vs Satisfaction",
+                "Kualitas Pengajaran vs Kepuasan (%)",
             ),
             use_container_width=True,
         )
     with right:
         st.subheader("Fasilitas kampus vs kepuasan")
         st.caption(
-            "Apakah mahasiswa yang menilai fasilitas rendah juga cenderung lebih "
-            "tidak puas?"
+            "Setiap baris berjumlah 100%: dari mahasiswa dengan rating fasilitas "
+            "tertentu, berapa persen yang puas, netral, dan tidak puas?"
         )
         st.plotly_chart(
             rating_satisfaction_heatmap(
                 filtered_df,
                 "campus_facilities_rating",
-                "Campus Facilities vs Satisfaction",
+                "Fasilitas Kampus vs Kepuasan (%)",
             ),
             use_container_width=True,
         )
-    st.caption(
-        "Pola di atas bersifat deskriptif dan tidak membuktikan hubungan sebab-akibat."
+    st.info(
+        "Pada data simulasi ini, peningkatan rating pengajaran maupun fasilitas "
+        "belum menunjukkan pergeseran tingkat kepuasan yang konsisten. "
+        "Temuan bersifat deskriptif dan tidak menunjukkan hubungan sebab-akibat."
     )
 
     st.divider()
@@ -626,42 +812,35 @@ def main() -> None:
     col_a, col_b = st.columns(2)
     with col_a:
         st.subheader("Kelas daring vs non-daring")
-        st.caption(
-            "Apakah mahasiswa yang mengikuti kelas daring menunjukkan distribusi "
-            "kepuasan yang berbeda?"
-        )
         st.plotly_chart(
             stacked_group_chart(
                 filtered_df,
                 "online_classes",
-                {"Yes": "Online: Yes", "No": "Online: No"},
+                {"Yes": "Daring", "No": "Non-daring"},
             ),
             use_container_width=True,
         )
+        st.info(online_classes_insight(filtered_df))
     with col_b:
         st.subheader("Penerima vs nonpenerima beasiswa")
-        st.caption(
-            "Apakah pengalaman mahasiswa penerima beasiswa berbeda dari mahasiswa "
-            "nonpenerima?"
-        )
         st.plotly_chart(
             stacked_group_chart(
                 filtered_df,
                 "scholarship",
-                {"Yes": "Scholarship: Yes", "No": "Scholarship: No"},
+                {"Yes": "Penerima", "No": "Nonpenerima"},
             ),
             use_container_width=True,
         )
+        st.info(scholarship_insight(filtered_df))
 
     st.divider()
     st.header("5. Data Detail dan Catatan")
-    st.dataframe(
-        filtered_df[DISPLAY_COLUMNS].sort_values(
-            ["field_of_study", "program_level", "student_id"]
-        ),
-        use_container_width=True,
-        hide_index=True,
+    detail_view = (
+        filtered_df[DISPLAY_COLUMNS]
+        .sort_values(["field_of_study", "program_level", "student_id"])
+        .rename(columns=DISPLAY_COLUMN_LABELS)
     )
+    st.dataframe(detail_view, use_container_width=True, hide_index=True)
 
     csv = filtered_df[DISPLAY_COLUMNS].to_csv(index=False).encode("utf-8")
     st.download_button(
