@@ -21,28 +21,29 @@ st.markdown(
     span[data-baseweb="tag"] span[role="img"] {
         color: #0D47A1 !important;
     }
-    /* Caption lebih terbaca saat presentasi */
+    /* Caption mengikuti warna teks tema Streamlit (light/dark) */
     [data-testid="stCaptionContainer"] p {
         font-size: 0.95rem !important;
-        color: #37474F !important;
+        color: var(--text-color) !important;
+        opacity: 0.78;
     }
     .filter-summary {
-        background: #ECEFF1;
-        border-left: 4px solid #455A64;
+        background: var(--secondary-background-color);
+        border-left: 4px solid var(--primary-color, #455A64);
         padding: 0.75rem 1rem;
         border-radius: 0.35rem;
         margin: 0.5rem 0 0.75rem 0;
-        color: #263238;
+        color: var(--text-color);
         font-size: 0.95rem;
         line-height: 1.45;
     }
     .takeaway {
-        background: #E8EEF4;
-        border-left: 4px solid #37474F;
+        background: var(--secondary-background-color);
+        border-left: 4px solid var(--primary-color, #37474F);
         padding: 0.75rem 1rem;
         border-radius: 0.35rem;
         margin: 0.35rem 0 0.75rem 0;
-        color: #263238;
+        color: var(--text-color);
         font-size: 0.95rem;
         line-height: 1.45;
     }

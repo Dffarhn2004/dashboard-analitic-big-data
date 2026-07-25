@@ -30,11 +30,9 @@ Beberapa kebutuhan informasi utama pihak rektorat meliputi:
 
 8. Mengetahui perbedaan pengalaman mahasiswa yang mengikuti kelas daring dan mahasiswa yang tidak mengikuti kelas daring.
 
-9. Mengetahui hubungan antara biaya pendidikan dengan tingkat kepuasan mahasiswa.
+9. Mengetahui apakah kualitas pengajaran dan fasilitas kampus memiliki hubungan deskriptif dengan kepuasan mahasiswa secara keseluruhan.
 
-10. Mengetahui apakah kualitas pengajaran dan fasilitas kampus memiliki hubungan dengan kepuasan mahasiswa secara keseluruhan.
-
-11. Melakukan pemantauan berdasarkan karakteristik mahasiswa, seperti usia, gender, negara asal, bidang studi, tahun studi, dan jenjang pendidikan.
+10. Melakukan pemantauan berdasarkan karakteristik mahasiswa, seperti usia, gender, negara asal, bidang studi, tahun studi, dan jenjang pendidikan.
 
 Melalui dashboard ini, pihak rektorat dapat menggunakan informasi tersebut sebagai dasar untuk mengambil keputusan strategis. Sebagai contoh, apabila terdapat bidang studi dengan tingkat kepuasan rendah, rektorat dapat melakukan evaluasi lebih lanjut terhadap kualitas pengajaran, fasilitas pembelajaran, atau layanan akademik pada bidang studi tersebut.
 

@@ -1,6 +1,6 @@
-# Dashboard Kinerja Universitas
+# Dashboard Evaluasi Pengalaman dan Kepuasan Mahasiswa
 
-Dashboard interaktif berbasis **Streamlit** untuk membantu pihak rektorat memantau indikator utama universitas, seperti jumlah mahasiswa aktif, jumlah lulusan, publikasi dosen, kelulusan tepat waktu, tingkat penyerapan lulusan, dan status akreditasi.
+Dashboard interaktif berbasis **Streamlit** untuk membantu pihak rektorat memantau tingkat kepuasan mahasiswa, menilai kualitas pengajaran dan fasilitas kampus, serta mengidentifikasi kelompok mahasiswa yang memerlukan perhatian.
 
 ## Pengguna Utama
 
@@ -8,31 +8,31 @@ Pengguna utama dashboard adalah **pihak rektorat dan pimpinan universitas**.
 
 Dashboard digunakan untuk:
 
-- Memantau perkembangan jumlah mahasiswa.
-- Membandingkan performa antar-fakultas.
-- Melihat tren publikasi dosen.
-- Mengevaluasi kelulusan tepat waktu.
-- Memantau persentase lulusan yang telah bekerja.
-- Melihat distribusi status akreditasi.
+- Memantau distribusi tingkat kepuasan mahasiswa.
+- Membandingkan proporsi ketidakpuasan antar bidang studi.
+- Melihat penilaian kualitas pengajaran dan fasilitas kampus.
+- Membandingkan pengalaman kelas daring vs non-daring.
+- Membandingkan pengalaman penerima vs nonpenerima beasiswa.
+- Melihat proporsi ketidakpuasan berdasarkan negara asal mahasiswa.
 
 ## Fitur
 
-- Filter berdasarkan tahun.
-- Filter berdasarkan fakultas.
-- KPI jumlah mahasiswa, lulusan, publikasi, dan penyerapan lulusan.
-- Bar chart mahasiswa aktif per fakultas.
-- Line chart tren publikasi dosen.
-- Grafik kelulusan tepat waktu.
-- Pie chart distribusi akreditasi.
+- Filter interaktif (bidang studi, tahun studi, kelas daring, beasiswa, jenjang, negara, gender).
+- KPI total responden, proporsi puas/netral/tidak puas, serta rata-rata rating.
+- Bar chart distribusi tingkat kepuasan.
+- Peta proporsi mahasiswa tidak puas menurut negara asal.
+- Stacked bar kepuasan per bidang studi.
+- Heatmap kualitas pengajaran / fasilitas vs kepuasan.
+- Perbandingan pengalaman kelas daring dan status beasiswa.
 - Tabel data detail.
 - Unduh data hasil filter dalam format CSV.
 
 ## Sumber Data
 
-Proyek ini menggunakan **data simulasi** untuk tahun 2021–2026. Data disimpan pada:
+Proyek ini menggunakan **World University Student Survey Dataset** (Kaggle, data sintetis). Seluruh responden diperlakukan sebagai mahasiswa dari satu universitas simulasi. Data disimpan pada:
 
 ```text
-data/university_data.csv
+data/world_university_survey_dataset.csv
 ```
 
 ## Struktur Proyek
@@ -42,8 +42,12 @@ dashboard-universitas/
 ├── app.py
 ├── requirements.txt
 ├── README.md
-└── data/
-    └── university_data.csv
+├── data/
+│   └── world_university_survey_dataset.csv
+└── documentation/
+    ├── laporan.md
+    ├── prd.md
+    └── narasi.md
 ```
 
 ## Cara Menjalankan
@@ -51,8 +55,8 @@ dashboard-universitas/
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/USERNAME/dashboard-universitas.git
-cd dashboard-universitas
+git clone https://github.com/Dffarhn2004/dashboard-analitic-big-data.git
+cd dashboard-analitic-big-data
 ```
 
 ### 2. Buat virtual environment
@@ -95,12 +99,16 @@ http://localhost:8501
 
 ## Publikasi
 
-Dashboard dapat dipublikasikan melalui Streamlit Community Cloud setelah kode diunggah ke GitHub.
+Dashboard dipublikasikan melalui Streamlit Community Cloud. Dokumentasi laporan (bagian A–D tugas) tersedia di folder `documentation/`.
+
+### Dashboard online
+
+```text
+https://25917045-analyticbigdata.streamlit.app/
+```
 
 ## Tautan Repository
 
-Ganti bagian berikut dengan tautan repository GitHub Anda:
-
 ```text
-https://github.com/USERNAME/dashboard-universitas
+https://github.com/Dffarhn2004/dashboard-analitic-big-data
 ```

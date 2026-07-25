@@ -577,7 +577,7 @@ Dashboard ini menggunakan data survei sintetis mahasiswa. Untuk menyesuaikan rua
 
 Pihak rektorat membutuhkan informasi mengenai kondisi kepuasan mahasiswa secara keseluruhan serta faktor-faktor yang berkaitan dengan pengalaman mahasiswa. Dashboard dirancang untuk membantu rektorat mengetahui proporsi mahasiswa yang puas, netral, dan tidak puas; mengevaluasi kualitas pengajaran dan fasilitas kampus; serta mengidentifikasi bidang studi, jenjang pendidikan, atau kelompok mahasiswa yang menunjukkan tingkat ketidakpuasan relatif tinggi.
 
-Selain itu, rektorat membutuhkan perbandingan pengalaman berdasarkan status beasiswa dan pelaksanaan kelas daring. Dashboard juga membantu melihat pola hubungan antara kualitas pengajaran, fasilitas kampus, biaya pendidikan, dan kepuasan mahasiswa.
+Selain itu, rektorat membutuhkan perbandingan pengalaman berdasarkan status beasiswa dan pelaksanaan kelas daring. Dashboard juga membantu melihat pola hubungan antara kualitas pengajaran, fasilitas kampus, dan kepuasan mahasiswa.
 
 Informasi tersebut digunakan sebagai dasar awal untuk menentukan area yang memerlukan evaluasi lebih lanjut. Sebagai contoh, apabila suatu bidang studi memiliki proporsi mahasiswa tidak puas yang tinggi serta penilaian kualitas pengajaran di bawah rata-rata, bidang studi tersebut dapat diprioritaskan dalam evaluasi akademik. Dashboard tidak dimaksudkan untuk membuktikan hubungan sebab-akibat, tetapi untuk memberikan gambaran deskriptif dan menemukan pola yang dapat mendukung pengambilan keputusan rektorat.
 
