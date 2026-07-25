@@ -72,6 +72,8 @@ CATEGORY_COLORS = {
     "Netral": "#9E9E9E",
     "Tidak Puas": "#C62828",
 }
+# Heatmap pengajaran/fasilitas vs kepuasan — set True jika ingin ditampilkan lagi
+SHOW_FACTOR_SECTION = False
 COUNTRY_ISO3 = {
     "Australia": "AUS",
     "Canada": "CAN",
@@ -484,6 +486,16 @@ def satisfaction_takeaway(filtered_df: pd.DataFrame) -> str:
     )
 
 
+def fields_ordered_by_dissatisfaction(filtered_df: pd.DataFrame) -> list[str]:
+    """Urutan bidang studi: % Tidak Puas tertinggi ke terendah (sama di kedua chart)."""
+    pct = (
+        filtered_df.groupby("field_of_study")["satisfaction_category"]
+        .apply(lambda s: (s == "Tidak Puas").mean())
+        .sort_values(ascending=False)
+    )
+    return pct.index.tolist()
+
+
 def field_satisfaction_chart(filtered_df: pd.DataFrame):
     field_counts = (
         filtered_df.groupby(["field_of_study", "satisfaction_category"])
@@ -510,17 +522,7 @@ def field_satisfaction_chart(filtered_df: pd.DataFrame):
         ),
     )
 
-    order_fields = (
-        field_counts[field_counts["satisfaction_category"] == "Tidak Puas"]
-        .sort_values("persen", ascending=False)["field_of_study"]
-        .tolist()
-    )
-    missing = [
-        field
-        for field in sorted(filtered_df["field_of_study"].unique())
-        if field not in order_fields
-    ]
-    order_fields = order_fields + missing
+    order_fields = fields_ordered_by_dissatisfaction(filtered_df)
     order_labels = [f"{f} (n={field_n[f]})" for f in order_fields]
 
     fig = px.bar(
@@ -584,6 +586,10 @@ def teaching_facilities_by_field_chart(filtered_df: pd.DataFrame):
         ),
     )
 
+    order_fields = fields_ordered_by_dissatisfaction(filtered_df)
+    n_by_field = summary.set_index("field_of_study")["n"].to_dict()
+    order_labels = [f"{f} (n={n_by_field[f]})" for f in order_fields]
+
     avg_teaching = filtered_df["teaching_quality_rating"].mean()
     avg_facilities = filtered_df["campus_facilities_rating"].mean()
 
@@ -594,6 +600,7 @@ def teaching_facilities_by_field_chart(filtered_df: pd.DataFrame):
         color="indikator",
         barmode="group",
         orientation="h",
+        category_orders={"field_label": order_labels},
         labels={
             "rata_rata": "Rata-rata (skala 1–5)",
             "field_label": "Bidang Studi",
@@ -1054,6 +1061,7 @@ def main() -> None:
 
     st.subheader("Kualitas pengajaran dan fasilitas per bidang studi")
     st.caption(
+        "Urutan bidang studi sama dengan grafik di atas (% tidak puas tertinggi). "
         "Membandingkan rata-rata kualitas pengajaran dan fasilitas pada setiap bidang studi. "
         "Garis putus-putus menunjukkan rata-rata seluruh responden berdasarkan filter aktif. "
         "Skala sumbu tetap 1–5 agar perbedaan tidak dilebih-lebihkan."
@@ -1064,70 +1072,74 @@ def main() -> None:
     )
     takeaway(priority_insight(filtered_df))
 
-    st.divider()
-    st.header("3. Faktor yang Berkaitan dengan Kepuasan")
-    st.caption(
-        "Bagian ini menelaah apakah distribusi kepuasan bergeser seiring "
-        "meningkatnya rating pengajaran dan fasilitas."
-    )
-    left, right = st.columns(2)
-    with left:
-        st.subheader("Kualitas pengajaran vs kepuasan")
+    if SHOW_FACTOR_SECTION:
+        st.divider()
+        st.header("3. Faktor yang Berkaitan dengan Kepuasan")
         st.caption(
-            "Membandingkan distribusi kepuasan pada setiap rating kualitas pengajaran. "
-            "Setiap baris berjumlah 100%."
+            "Bagian ini menelaah apakah distribusi kepuasan bergeser seiring "
+            "meningkatnya rating pengajaran dan fasilitas."
         )
-        st.plotly_chart(
-            rating_satisfaction_heatmap(
-                filtered_df,
-                "teaching_quality_rating",
-                "Kualitas Pengajaran vs Kepuasan (%)",
-            ),
-            use_container_width=True,
-        )
-        takeaway(
-            heatmap_rating_summary(
-                filtered_df, "teaching_quality_rating", "pengajaran"
+        left, right = st.columns(2)
+        with left:
+            st.subheader("Kualitas pengajaran vs kepuasan")
+            st.caption(
+                "Membandingkan distribusi kepuasan pada setiap rating kualitas pengajaran. "
+                "Setiap baris berjumlah 100%."
             )
-        )
-    with right:
-        st.subheader("Fasilitas kampus vs kepuasan")
-        st.caption(
-            "Membandingkan distribusi kepuasan pada setiap rating fasilitas kampus. "
-            "Setiap baris berjumlah 100%."
-        )
-        st.plotly_chart(
-            rating_satisfaction_heatmap(
-                filtered_df,
-                "campus_facilities_rating",
-                "Fasilitas Kampus vs Kepuasan (%)",
-            ),
-            use_container_width=True,
-        )
-        takeaway(
-            heatmap_rating_summary(
-                filtered_df, "campus_facilities_rating", "fasilitas"
+            st.plotly_chart(
+                rating_satisfaction_heatmap(
+                    filtered_df,
+                    "teaching_quality_rating",
+                    "Kualitas Pengajaran vs Kepuasan (%)",
+                ),
+                use_container_width=True,
             )
-        )
+            takeaway(
+                heatmap_rating_summary(
+                    filtered_df, "teaching_quality_rating", "pengajaran"
+                )
+            )
+        with right:
+            st.subheader("Fasilitas kampus vs kepuasan")
+            st.caption(
+                "Membandingkan distribusi kepuasan pada setiap rating fasilitas kampus. "
+                "Setiap baris berjumlah 100%."
+            )
+            st.plotly_chart(
+                rating_satisfaction_heatmap(
+                    filtered_df,
+                    "campus_facilities_rating",
+                    "Fasilitas Kampus vs Kepuasan (%)",
+                ),
+                use_container_width=True,
+            )
+            takeaway(
+                heatmap_rating_summary(
+                    filtered_df, "campus_facilities_rating", "fasilitas"
+                )
+            )
 
-    with st.expander("Cara membaca heatmap"):
-        st.markdown(
-            """
+        with st.expander("Cara membaca heatmap"):
+            st.markdown(
+                """
 Setiap baris menunjukkan rating **1–5**. Warna yang lebih gelap menunjukkan
 proporsi responden yang lebih besar pada kategori kepuasan tersebut.
 Bandingkan baris dari atas ke bawah untuk melihat apakah peningkatan rating
 diikuti pergeseran distribusi kepuasan.
 """
+            )
+        takeaway(
+            "<strong>Temuan:</strong> Pada data filter aktif, peningkatan rating "
+            "pengajaran maupun fasilitas belum tentu diikuti peningkatan kepuasan "
+            "yang konsisten. Angka pada ringkasan di atas bersifat deskriptif dan "
+            "tidak menunjukkan hubungan sebab-akibat."
         )
-    takeaway(
-        "<strong>Temuan:</strong> Pada data filter aktif, peningkatan rating "
-        "pengajaran maupun fasilitas belum tentu diikuti peningkatan kepuasan "
-        "yang konsisten. Angka pada ringkasan di atas bersifat deskriptif dan "
-        "tidak menunjukkan hubungan sebab-akibat."
-    )
+
+    section_experience = "4" if SHOW_FACTOR_SECTION else "3"
+    section_detail = "5" if SHOW_FACTOR_SECTION else "4"
 
     st.divider()
-    st.header("4. Perbandingan Pengalaman Mahasiswa")
+    st.header(f"{section_experience}. Perbandingan Pengalaman Mahasiswa")
     st.caption(
         "Bagian ini membandingkan distribusi kepuasan antar pengalaman belajar "
         "(kelas daring) dan status beasiswa."
@@ -1165,7 +1177,7 @@ diikuti pergeseran distribusi kepuasan.
         takeaway(scholarship_insight(filtered_df))
 
     st.divider()
-    st.header("5. Data Detail dan Catatan")
+    st.header(f"{section_detail}. Data Detail dan Catatan")
     st.caption(
         f"Jumlah baris setelah filter: **{fmt_int(len(filtered_df))} dari "
         f"{fmt_int(len(df))} responden** · Terakhir diperbarui: **{updated_label}**"
